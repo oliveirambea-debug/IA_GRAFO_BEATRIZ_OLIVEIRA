@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +40,7 @@ import kotlin.random.Random
 
 /** Idle screen: a sky that follows the real time of day, a city silhouette, big clock and weather. */
 @Composable
-fun AmbientScreen(weather: Weather?) {
+fun AmbientScreen(weather: Weather?, photoUrl: String? = null) {
     val now = rememberNow()
     val minuteOfDay = now.hour * 60 + now.minute
     val sunrise = weather?.sunriseMin ?: (6 * 60)
@@ -54,6 +57,20 @@ fun AmbientScreen(weather: Weather?) {
     Box(Modifier.fillMaxSize()) {
         Canvas(Modifier.fillMaxSize()) {
             drawSky(minuteOfDay, sunrise, sunset, cloudy, drift, skyline)
+        }
+        if (photoUrl != null) {
+            // Real photo on top of the sky; the sky stays visible while it loads or if it fails.
+            AsyncImage(
+                model = photoUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.65f))
+                )
+            )
         }
         // Small shift every minute so a static clock never burns into the panel.
         val shift = (now.minute % 6) * 6

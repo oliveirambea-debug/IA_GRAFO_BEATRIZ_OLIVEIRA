@@ -1,5 +1,6 @@
 package com.beatriz.tvlauncher.ui
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
@@ -9,6 +10,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +52,7 @@ import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -73,6 +77,7 @@ import com.beatriz.tvlauncher.data.ProviderFeed
 import com.beatriz.tvlauncher.data.Providers
 import com.beatriz.tvlauncher.data.Title
 import com.beatriz.tvlauncher.data.Tmdb
+import com.beatriz.tvlauncher.data.Weather
 import kotlinx.coroutines.delay
 
 private val DockHeight: Dp = 150.dp
@@ -129,19 +134,9 @@ fun HomeScreen(vm: LauncherViewModel) {
             when (val item = state.item) {
                 is DockItem.App ->
                     if (state.feed != null) FeedHero(item.entry, state.feed, openSelected, onTitle = { openSelected() })
-                    else AppHero(item.entry, showTmdbHint, openSelected)
-                DockItem.AllApps -> SimpleHero(
-                    title = stringResource(R.string.all_apps),
-                    subtitle = stringResource(R.string.apps_installed, vm.apps.size),
-                    colors = listOf(Color(0xFF3B2D6B), Color(0xFF14122A), Color.Black),
-                    onOpen = openSelected,
-                )
-                DockItem.Settings -> SimpleHero(
-                    title = stringResource(R.string.settings),
-                    subtitle = stringResource(R.string.settings_subtitle),
-                    colors = listOf(Color(0xFF26485A), Color(0xFF0F1B24), Color.Black),
-                    onOpen = openSelected,
-                )
+                    else AppCard(item.entry, showTmdbHint)
+                DockItem.AllApps -> AllAppsCard(vm.apps)
+                DockItem.Settings -> SettingsCard(vm.weather)
             }
         }
 
@@ -185,9 +180,9 @@ private fun Dock(
             .fillMaxWidth()
             .height(DockHeight)
             .focusRestorer { requester(selectedKey) },
-        horizontalArrangement = Arrangement.spacedBy(22.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(26.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.Top,
-        contentPadding = PaddingValues(start = 56.dp, end = 56.dp, top = 24.dp),
+        contentPadding = PaddingValues(start = 56.dp, end = 56.dp, top = 34.dp),
     ) {
         items(items, key = { it.key }) { item ->
             DockTile(
@@ -210,37 +205,44 @@ private fun DockTile(
     onLongClick: () -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
-    val width = if (item is DockItem.App) 136.dp else 76.dp
     val label = when (item) {
         is DockItem.App -> item.entry.label
         DockItem.AllApps -> stringResource(R.string.all_apps)
         DockItem.Settings -> stringResource(R.string.settings)
     }
-    Column(Modifier.width(width), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.width(72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(
             onClick = onClick,
             onLongClick = onLongClick,
             modifier = Modifier
-                .size(width, 76.dp)
+                .size(58.dp)
                 .focusRequester(requester)
                 .onFocusChanged {
                     focused = it.isFocused
                     if (it.isFocused) onFocus()
                 },
-            shape = ClickableSurfaceDefaults.shape(TileShape),
-            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.22f),
-            border = tileBorder(),
-            colors = tileColors(),
+            shape = ClickableSurfaceDefaults.shape(IconShape),
+            scale = ClickableSurfaceDefaults.scale(focusedScale = 1.4f),
+            colors = ClickableSurfaceDefaults.colors(
+                containerColor = Color(0xFF2A2D35),
+                focusedContainerColor = Color(0xFF2A2D35),
+                pressedContainerColor = Color(0xFF3A3D45),
+            ),
         ) {
             when (item) {
-                is DockItem.App -> AppArt(item.entry)
+                is DockItem.App -> Image(
+                    item.entry.icon,
+                    contentDescription = label,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                )
                 DockItem.AllApps -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { GridGlyph() }
                 DockItem.Settings -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Settings, contentDescription = label, tint = Color.White, modifier = Modifier.size(30.dp))
+                    Icon(Icons.Filled.Settings, contentDescription = label, tint = Color.White, modifier = Modifier.size(28.dp))
                 }
             }
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(22.dp))
         val alpha by animateFloatAsState(if (focused) 1f else 0f, label = "label")
         Text(
             label,
@@ -253,6 +255,8 @@ private fun DockTile(
         )
     }
 }
+
+private val IconShape = RoundedCornerShape(16.dp)
 
 @Composable
 private fun PinMenu(app: AppEntry, vm: LauncherViewModel, onDismiss: () -> Unit) {
@@ -422,7 +426,7 @@ private fun FeedHero(app: AppEntry, feed: ProviderFeed, onOpen: () -> Unit, onTi
 private fun TitleCard(t: Title, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        modifier = Modifier.width(172.dp).aspectRatio(16f / 9f),
+        modifier = Modifier.width(150.dp).aspectRatio(16f / 9f),
         shape = ClickableSurfaceDefaults.shape(TileShape),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
         border = tileBorder(),
@@ -446,55 +450,107 @@ private fun TitleCard(t: Title, onClick: () -> Unit) {
     }
 }
 
+/** Floating card over a blurred, tinted background, with an action pill underneath (non-streaming items). */
 @Composable
-private fun AppHero(app: AppEntry, showTmdbHint: Boolean, onOpen: () -> Unit) {
+private fun CardHero(
+    tint: Color,
+    art: ImageBitmap?,
+    primary: String,
+    secondary: String?,
+    card: @Composable BoxScope.() -> Unit,
+) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.linearGradient(listOf(app.color.darken(0.3f), app.color.darken(0.8f), Color.Black)))
+            .background(Brush.linearGradient(listOf(tint.darken(0.15f), tint.darken(0.7f), Color(0xFF07080B))))
     ) {
-        val art = app.banner ?: app.icon
-        Image(
-            art,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .fillMaxWidth(0.65f)
-                .alpha(0.35f)
-                .blur(28.dp),
-        )
-        Scrims()
-        HeroColumn {
-            Box(Modifier.size(224.dp, 126.dp).clip(TileShape)) { AppArt(app) }
-            Spacer(Modifier.height(18.dp))
-            Text(app.label, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = Color.White)
-            if (showTmdbHint) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    stringResource(R.string.tmdb_hint, app.label),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier.widthIn(max = 560.dp),
-                )
+        if (art != null && Build.VERSION.SDK_INT >= 31) {
+            Image(art, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize().alpha(0.5f).blur(90.dp))
+        }
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.2f), 1f to Color.Black.copy(alpha = 0.8f))))
+        Column(
+            Modifier.align(Alignment.TopCenter).padding(top = 46.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            val shape = RoundedCornerShape(26.dp)
+            Box(
+                Modifier
+                    .width(580.dp)
+                    .height(240.dp)
+                    .clip(shape)
+                    .background(Color(0xFF15171C).copy(alpha = 0.78f))
+                    .border(1.dp, Color.White.copy(alpha = 0.12f), shape)
+                    .padding(22.dp),
+                content = card,
+            )
+            Spacer(Modifier.height(12.dp))
+            Box(Modifier.size(44.dp, 4.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.45f)))
+            Spacer(Modifier.height(12.dp))
+            Row(
+                Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.14f)).padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    Modifier.clip(RoundedCornerShape(50)).background(Color.White).padding(horizontal = 14.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(primary, style = MaterialTheme.typography.labelMedium, color = Color.Black)
+                }
+                if (secondary != null) {
+                    Text(secondary, Modifier.padding(horizontal = 14.dp), style = MaterialTheme.typography.labelMedium, color = Color.White)
+                }
             }
-            Spacer(Modifier.height(16.dp))
-            OpenButton(stringResource(R.string.open_app, app.label), onOpen)
         }
     }
 }
 
 @Composable
-private fun SimpleHero(title: String, subtitle: String, colors: List<Color>, onOpen: () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Brush.linearGradient(colors))) {
-        Scrims()
-        HeroColumn {
-            Text(title, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = Color.White)
+private fun AppCard(app: AppEntry, showTmdbHint: Boolean) {
+    CardHero(app.color, app.banner ?: app.icon, stringResource(R.string.open_app, app.label), null) {
+        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.fillMaxHeight().aspectRatio(16f / 9f).clip(RoundedCornerShape(18.dp))) { AppArt(app) }
+            Spacer(Modifier.width(22.dp))
+            Column {
+                Text(app.label, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 2)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    if (showTmdbHint) stringResource(R.string.tmdb_hint, app.label) else stringResource(R.string.press_ok),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.7f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AllAppsCard(apps: List<AppEntry>) {
+    CardHero(Color(0xFF4A3A8C), null, stringResource(R.string.all_apps), stringResource(R.string.apps_count, apps.size)) {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+            Text(stringResource(R.string.all_apps), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(stringResource(R.string.all_apps_card, apps.size), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.7f))
+            Spacer(Modifier.height(18.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                apps.take(5).forEach { a ->
+                    Box(Modifier.size(94.dp, 53.dp).clip(RoundedCornerShape(12.dp))) { AppArt(a) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsCard(weather: Weather?) {
+    val place = weather?.let { "${it.city} · ${it.tempC}° · ${stringResource(weatherText(it.code))}" }
+    CardHero(Color(0xFF2E5A6E), null, stringResource(R.string.settings), weather?.let { "${it.city} · ${it.tempC}°" }) {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center) {
+            Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(Modifier.height(6.dp))
-            Text(subtitle, style = MaterialTheme.typography.bodyLarge, color = Color.White.copy(alpha = 0.75f))
-            Spacer(Modifier.height(16.dp))
-            OpenButton(stringResource(R.string.open), onOpen)
+            Text(stringResource(R.string.settings_subtitle), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.7f))
+            Spacer(Modifier.height(18.dp))
+            Text(place ?: stringResource(R.string.setting_city_unset), style = MaterialTheme.typography.titleMedium, color = Color.White)
         }
     }
 }

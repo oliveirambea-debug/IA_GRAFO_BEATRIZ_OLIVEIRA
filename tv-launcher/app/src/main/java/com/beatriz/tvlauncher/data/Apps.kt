@@ -35,7 +35,7 @@ object AppRepository {
                         .setClassName(pkg, ai.name)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
                     val banner = ai.loadBanner(pm)?.toBitmap(320, 180)
-                    val icon = ri.loadIcon(pm).toBitmap(160, 160)
+                    val icon = ri.loadIcon(pm).toBitmap(192, 192)
                     val palette = Palette.from(banner ?: icon).generate()
                     val color = palette.getVibrantColor(palette.getDominantColor(0xFF33415C.toInt()))
                     result[pkg] = AppEntry(

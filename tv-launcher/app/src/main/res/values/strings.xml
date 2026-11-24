@@ -50,4 +50,7 @@
     <string name="wx_snow">Snow</string>
     <string name="wx_showers">Showers</string>
     <string name="wx_storm">Thunderstorm</string>
+    <string name="all_apps_card">%1$d apps installed on your TV · OK to see them all</string>
+    <string name="press_ok">Press OK to open</string>
+    <string name="apps_count">%1$d apps</string>
 </resources>

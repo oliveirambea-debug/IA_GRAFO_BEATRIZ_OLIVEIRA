@@ -40,6 +40,8 @@ import java.time.LocalTime
  * Renders each screen to build/screenshots/ with fake apps and placeholder art.
  * Run: ./gradlew testDebugUnitTest
  */
+object DockItemKeys { const val ALL_APPS = "__all_apps" }
+
 @OptIn(ExperimentalCoilApi::class)
 @RunWith(AndroidJUnit4::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -52,6 +54,7 @@ class ScreenshotTest {
     @Before
     fun fakeImages() {
         val engine = FakeImageLoaderEngine.Builder()
+            .intercept({ it is String && it.contains("bing.com") }, BitmapDrawable(app.resources, art(1920, 1080, 0xFF6B7FA8.toInt(), 0xFFE8A86B.toInt(), "")))
             .intercept({ it is String && it.contains("/w1280") }, BitmapDrawable(app.resources, art(1280, 720, 0xFF2E4A62.toInt(), 0xFFD9A066.toInt(), "")))
             .intercept({ it is String && it.contains("/w500") }, BitmapDrawable(app.resources, logo("NORTHWIND")))
             .default(BitmapDrawable(app.resources, art(300, 169, 0xFF5B3A7A.toInt(), 0xFF1D8A99.toInt(), "")))
@@ -132,6 +135,8 @@ class ScreenshotTest {
 
     @Test fun home_app() = capture("2_home_youtube", viewModel("com.google.android.youtube.tv"))
 
+    @Test fun home_all_apps_card() = capture("2b_home_all_apps_card", viewModel(DockItemKeys.ALL_APPS))
+
     @Test fun all_apps() = capture("3_all_apps", viewModel(null).also { it.screen = Screen.AllApps })
 
     @Test fun settings() = capture("4_settings", viewModel(null).also { it.screen = Screen.Settings })
@@ -147,6 +152,14 @@ class ScreenshotTest {
     @Test fun ambient_sunset() = ambient("5_ambient_sunset", -600, 15, 0)
 
     @Test fun ambient_day() = ambient("6_ambient_day", -300, 300, 2)
+
+    @Test fun ambient_photo() {
+        val vm = viewModel(null)
+        vm.weather = Weather("Lisboa", 18, 0, 6 * 60, 18 * 60)
+        vm.photoUrl = "https://www.bing.com/th?id=photo_1920x1080.jpg"
+        vm.ambient = true
+        capture("8_ambient_photo", vm, autoAdvance = false)
+    }
 
     @Test fun ambient_night() = ambient("7_ambient_night", 400, -200, 0)
 }

@@ -13,6 +13,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.beatriz.tvlauncher.data.AppEntry
 import com.beatriz.tvlauncher.data.AppRepository
+import com.beatriz.tvlauncher.data.DailyPhoto
 import com.beatriz.tvlauncher.data.Prefs
 import com.beatriz.tvlauncher.data.ProviderFeed
 import com.beatriz.tvlauncher.data.Providers
@@ -38,6 +39,7 @@ class LauncherViewModel @JvmOverloads constructor(
     var apps by mutableStateOf<List<AppEntry>>(emptyList()); internal set
     var pinned by mutableStateOf<List<String>>(emptyList()); internal set
     var weather by mutableStateOf<Weather?>(null); internal set
+    var photoUrl by mutableStateOf<String?>(null); internal set
     var screen by mutableStateOf(Screen.Home)
     var ambient by mutableStateOf(false)
 
@@ -63,8 +65,20 @@ class LauncherViewModel @JvmOverloads constructor(
     }
 
     private fun start() {
+        ambient = true // the TV wakes up on the clock screen; any key reveals the home screen
         refreshApps()
         startWeather()
+        viewModelScope.launch {
+            while (true) {
+                val url = withContext(Dispatchers.IO) {
+                    runCatching { DailyPhoto.url(Locale.getDefault().toLanguageTag()) }
+                        .onFailure { Log.w(TAG, "photo failed", it) }
+                        .getOrNull()
+                }
+                if (url != null) photoUrl = url
+                delay(if (url == null) 15 * 60_000L else 6 * 3600_000L)
+            }
+        }
         viewModelScope.launch {
             while (true) {
                 delay(10_000)

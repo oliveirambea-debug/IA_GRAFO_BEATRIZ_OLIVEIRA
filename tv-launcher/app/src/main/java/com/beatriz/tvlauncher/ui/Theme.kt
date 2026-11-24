@@ -43,7 +43,7 @@ fun LauncherApp(vm: LauncherViewModel) {
             enter = fadeIn(tween(1500)),
             exit = fadeOut(tween(500)),
         ) {
-            AmbientScreen(vm.weather)
+            AmbientScreen(vm.weather, vm.photoUrl)
         }
     }
 }
