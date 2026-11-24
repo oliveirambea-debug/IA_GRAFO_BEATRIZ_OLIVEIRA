@@ -1,0 +1,149 @@
+# Home TV: a custom home screen for Google TV
+
+A replacement home screen (launcher) for Google TV / Android TV, inspired by the
+"fix my cheap Google TV" idea: a full-screen hero that changes with the app you
+highlight, a clean dock of apps, a clock, and an ambient screen with live weather.
+
+| Home (streaming app) | Home (other app) |
+|---|---|
+| ![](docs/1_home_netflix.png) | ![](docs/2_home_youtube.png) |
+
+| YouTube card | Music card |
+|---|---|
+| ![](docs/2_home_youtube.png) | ![](docs/2c_home_spotify.png) |
+
+*(These images come from the screenshot tests, which use fake apps and placeholder
+posters. On the TV you see real app banners and real posters.)*
+
+## What it does
+
+- **Ambient screen first.** The TV wakes up on a full-screen photo of the day with a big
+  clock, the photo's place, and *city · temperature · conditions*. Any key reveals the home
+  screen. It also comes back after a few idle minutes (configurable).
+- **Dock carousel.** Square app icons along the bottom. The focused app always slides to
+  the centre, grows, gets a thin white border and shows its name. Hold OK on an app for
+  *Move left / Move right / Remove*.
+- **Streaming apps** (Netflix, Prime Video, Disney+, Max, Globoplay, Apple TV,
+  Paramount+): the whole screen becomes the most popular title on that service in your
+  country, with its backdrop, title logo, synopsis, a cream "▶ Open Netflix" pill, an
+  episode chip, and a row of more titles.
+- **YouTube:** a floating card with the latest video from each channel you follow (big
+  tiles), "More from your channels" underneath, and a "▶ Open YouTube · N channels
+  followed" pill. The background is the card's artwork, heavily blurred.
+- **Music apps** (Spotify, Deezer, YouTube Music…): the same card with the 3 most played
+  songs in your country and the trending albums.
+- **All apps** (the ⋮⋮⋮ tile): an "All your apps" card. Press OK for the full grid, and
+  hold OK on any app there to add it to the dock or remove it.
+- English and Portuguese, following the TV's language.
+
+## Data sources (all free)
+
+- **Streaming heroes:** [TMDB](https://www.themoviedb.org/) "where to watch" data. It
+  needs a free API key: create an account, then go to *Settings → API*. Either the v3
+  key or the v4 token works. "Popular" means TMDB popularity for titles on that service
+  in your region, **not** an official Top 10.
+- **YouTube card:** public channel feeds (no key). Choose the channels in *Settings →
+  YouTube channels* as `@handles` separated by commas. The defaults are
+  `@manualdomundo, @CienciaTodoDia, @kurzgesagt`.
+- **Music card:** Apple's public "most played" charts for your country (no key).
+- **Ambient photo:** Bing's photo of the day (no key). **Weather:** Open-Meteo (no key).
+- Launchers can't read other apps' private data (your "continue watching", your Spotify
+  playlists), so those parts show public data instead.
+
+## 1. Get the APK
+
+**Option A, from GitHub (easiest).** Every push that touches `tv-launcher/` runs the
+*Build TV launcher APK* workflow. Open the repo's **Actions** tab, click the latest
+run, and download **home-tv-apk**. It's a zip containing `app-debug.apk`.
+To bake your TMDB key into it, add a repository secret named `TMDB_API_KEY`
+(*Settings → Secrets and variables → Actions*), then re-run the workflow.
+
+**Option B, build it yourself.** You need JDK 17+ and the Android SDK (Android Studio
+installs both).
+
+```bash
+cd tv-launcher
+echo "TMDB_API_KEY=your_key_here" >> local.properties   # optional
+./gradlew assembleDebug
+# -> app/build/outputs/apk/debug/app-debug.apk
+```
+
+## 2. Install it on the TV
+
+1. On the TV: *Settings → System → About*, then click **Android TV OS build** 7 times
+   to unlock Developer options.
+2. *Settings → System → Developer options*: turn on **USB debugging** (on some TVs
+   it's called **Network debugging** or **Wireless debugging**).
+3. Find the TV's IP address: *Settings → Network & Internet → (your Wi-Fi)*.
+4. On a computer with [platform-tools](https://developer.android.com/tools/releases/platform-tools)
+   (`adb`) on the same network:
+
+```bash
+adb connect 192.168.x.x:5555     # accept the prompt on the TV
+adb install -r app-debug.apk
+```
+
+No computer? Install **Send Files to TV** or **Downloader** from the Play Store on
+the TV, send the APK from your phone, and open it. You'll need to allow
+"install unknown apps" for that app.
+
+The app now appears in your apps list as **Home TV**. You can open it right away
+to try it.
+
+## 3. Make it the home screen
+
+Google TV doesn't offer a menu to change the home app, so there are two routes.
+
+**Route 1: disable the stock launcher (true replacement, reversible).**
+
+```bash
+adb shell pm disable-user --user 0 com.google.android.apps.tv.launcherx
+adb shell pm disable-user --user 0 com.google.android.tungsten.setupwraith
+```
+
+Press **Home** on the remote. If Android asks which app to use, pick **Home TV**
+and choose *Always*. On older Android TV models (not Google TV), the stock launcher
+is `com.google.android.tvlauncher` instead.
+
+To undo it at any time:
+
+```bash
+adb shell pm enable com.google.android.apps.tv.launcherx
+adb shell pm enable com.google.android.tungsten.setupwraith
+```
+
+Caveats: with the stock launcher disabled you lose Google TV's own home-screen
+features (recommendations, profiles, the "For you" tab). Some manufacturers ship
+their own launcher package, and a system update can re-enable the stock one, in
+which case you run the commands again. Disabling these packages is a common,
+reversible tweak, but you do it at your own risk.
+
+**Route 2: remap the Home button (no system changes).** Install
+**Button Mapper** from the Play Store and set *Home → single press → open app →
+Home TV*.
+
+## First run
+
+1. Highlight the ⚙ tile at the right end of the dock, then:
+   - **City for weather**: type your city, e.g. `São Paulo`.
+   - **Streaming region**: a country code such as `BR`, `PT` or `US`. It defaults to
+     the TV's country.
+   - **TMDB API key**: paste it here if it wasn't baked into the APK.
+2. Open **All apps** (⋮⋮⋮) and hold OK on apps to choose your dock.
+
+## Project layout
+
+```
+tv-launcher/
+  app/src/main/java/com/beatriz/tvlauncher/
+    MainActivity.kt          home activity, key handling, ambient wake-up
+    LauncherViewModel.kt     state: apps, dock, feeds, weather, idle timer
+    data/                    installed apps, TMDB, Open-Meteo, settings
+    ui/HomeScreen.kt         hero + dock
+    ui/AmbientScreen.kt      sky/clock/weather idle screen
+    ui/AllAppsScreen.kt, ui/SettingsScreen.kt
+  app/src/test/.../ScreenshotTest.kt   renders every screen to app/build/screenshots
+```
+
+Built with Kotlin and Jetpack Compose for TV. To re-render the screenshots after a
+UI change, run `./gradlew testDebugUnitTest`.
