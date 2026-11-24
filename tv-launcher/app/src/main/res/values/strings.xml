@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Home TV</string>
+    <string name="trending_on">%1$s · Popular right now</string>
+    <string name="more_on">More on %1$s</string>
+    <string name="open_app">Open %1$s</string>
+    <string name="open">Open</string>
+    <string name="all_apps">All apps</string>
+    <string name="all_apps_hint">OK opens · hold OK to add or remove it from the home row</string>
+    <string name="apps_installed">%1$d apps installed</string>
+    <string name="settings">Settings</string>
+    <string name="settings_subtitle">City, weather, ambient screen, trending data</string>
+    <string name="tmdb_hint">Add a free TMDB key in Settings to see what\'s trending on %1$s.</string>
+    <string name="pinned">Added to home</string>
+    <string name="unpinned">Removed from home</string>
+    <string name="move_left">Move left</string>
+    <string name="move_right">Move right</string>
+    <string name="remove_from_home">Remove from home</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="runtime_fmt">%1$dh %2$02dmin</string>
+    <plurals name="episodes">
+        <item quantity="one">%d episode</item>
+        <item quantity="other">%d episodes</item>
+    </plurals>
+    <plurals name="seasons">
+        <item quantity="one">%d season</item>
+        <item quantity="other">%d seasons</item>
+    </plurals>
+
+    <string name="setting_city">City for weather</string>
+    <string name="setting_city_unset">Not set (tap to choose)</string>
+    <string name="setting_region">Streaming region (country code)</string>
+    <string name="setting_tmdb">TMDB API key</string>
+    <string name="setting_tmdb_unset">Not set: trending heroes are off</string>
+    <string name="setting_tmdb_set">Set</string>
+    <string name="setting_ambient">Ambient screen after</string>
+    <string name="ambient_off">Never</string>
+    <string name="ambient_minutes">%1$d min</string>
+    <string name="show_ambient">Show ambient screen now</string>
+    <string name="android_settings">Android settings</string>
+    <string name="about">Version %1$s · data from TMDB and Open-Meteo</string>
+
+    <string name="wx_clear">Clear sky</string>
+    <string name="wx_partly">Partly cloudy</string>
+    <string name="wx_cloudy">Cloudy</string>
+    <string name="wx_fog">Fog</string>
+    <string name="wx_drizzle">Drizzle</string>
+    <string name="wx_rain">Rain</string>
+    <string name="wx_snow">Snow</string>
+    <string name="wx_showers">Showers</string>
+    <string name="wx_storm">Thunderstorm</string>
+</resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Home TV</string>
+    <string name="trending_on">%1$s · Em alta agora</string>
+    <string name="more_on">Mais na %1$s</string>
+    <string name="open_app">Abrir %1$s</string>
+    <string name="open">Abrir</string>
+    <string name="all_apps">Todos os apps</string>
+    <string name="all_apps_hint">OK abre · segure OK para adicionar ou remover da tela inicial</string>
+    <string name="apps_installed">%1$d apps instalados</string>
+    <string name="settings">Configurações</string>
+    <string name="settings_subtitle">Cidade, clima, tela ambiente, dados de tendências</string>
+    <string name="tmdb_hint">Adicione uma chave gratuita do TMDB nas Configurações para ver o que está em alta na %1$s.</string>
+    <string name="pinned">Adicionado à tela inicial</string>
+    <string name="unpinned">Removido da tela inicial</string>
+    <string name="move_left">Mover para a esquerda</string>
+    <string name="move_right">Mover para a direita</string>
+    <string name="remove_from_home">Remover da tela inicial</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save">Salvar</string>
+    <string name="runtime_fmt">%1$dh %2$02dmin</string>
+    <plurals name="episodes">
+        <item quantity="one">%d episódio</item>
+        <item quantity="other">%d episódios</item>
+    </plurals>
+    <plurals name="seasons">
+        <item quantity="one">%d temporada</item>
+        <item quantity="other">%d temporadas</item>
+    </plurals>
+
+    <string name="setting_city">Cidade para o clima</string>
+    <string name="setting_city_unset">Não definida (toque para escolher)</string>
+    <string name="setting_region">Região de streaming (código do país)</string>
+    <string name="setting_tmdb">Chave da API do TMDB</string>
+    <string name="setting_tmdb_unset">Não definida: destaques desativados</string>
+    <string name="setting_tmdb_set">Definida</string>
+    <string name="setting_ambient">Tela ambiente após</string>
+    <string name="ambient_off">Nunca</string>
+    <string name="ambient_minutes">%1$d min</string>
+    <string name="show_ambient">Mostrar tela ambiente agora</string>
+    <string name="android_settings">Configurações do Android</string>
+    <string name="about">Versão %1$s · dados do TMDB e Open-Meteo</string>
+
+    <string name="wx_clear">Céu limpo</string>
+    <string name="wx_partly">Parcialmente nublado</string>
+    <string name="wx_cloudy">Nublado</string>
+    <string name="wx_fog">Neblina</string>
+    <string name="wx_drizzle">Garoa</string>
+    <string name="wx_rain">Chuva</string>
+    <string name="wx_snow">Neve</string>
+    <string name="wx_showers">Pancadas de chuva</string>
+    <string name="wx_storm">Tempestade</string>
+</resources>
