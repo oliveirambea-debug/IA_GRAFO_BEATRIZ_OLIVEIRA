@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import kotlinx.coroutines.delay
@@ -50,7 +51,7 @@ fun dateText(now: LocalDateTime): String {
 fun ClockBadge(modifier: Modifier = Modifier) {
     val now = rememberNow()
     Column(modifier, horizontalAlignment = Alignment.End) {
-        Text(timeText(now), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
-        Text(dateText(now), style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.75f))
+        Text(timeText(now), fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+        Text(dateText(now), fontSize = 10.sp, color = Color.White.copy(alpha = 0.75f))
     }
 }

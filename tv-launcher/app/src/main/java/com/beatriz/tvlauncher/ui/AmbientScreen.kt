@@ -33,14 +33,15 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.beatriz.tvlauncher.R
+import com.beatriz.tvlauncher.data.DailyPhoto
 import com.beatriz.tvlauncher.data.Weather
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.random.Random
 
-/** Idle screen: a sky that follows the real time of day, a city silhouette, big clock and weather. */
+/** Idle screen: today's landscape photo (or a live sky), a big clock, the photo's place and the weather. */
 @Composable
-fun AmbientScreen(weather: Weather?, photoUrl: String? = null) {
+fun AmbientScreen(weather: Weather?, photo: DailyPhoto.Photo? = null) {
     val now = rememberNow()
     val minuteOfDay = now.hour * 60 + now.minute
     val sunrise = weather?.sunriseMin ?: (6 * 60)
@@ -58,39 +59,45 @@ fun AmbientScreen(weather: Weather?, photoUrl: String? = null) {
         Canvas(Modifier.fillMaxSize()) {
             drawSky(minuteOfDay, sunrise, sunset, cloudy, drift, skyline)
         }
-        if (photoUrl != null) {
-            // Real photo on top of the sky; the sky stays visible while it loads or if it fails.
+        if (photo != null) {
             AsyncImage(
-                model = photoUrl,
+                model = photo.url,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.65f))
-                )
-            )
         }
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(0.5f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.55f))
+            )
+        )
         // Small shift every minute so a static clock never burns into the panel.
-        val shift = (now.minute % 6) * 6
+        val shift = (now.minute % 6) * 5
         Column(
             Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 64.dp, bottom = 52.dp)
-                .offset(x = shift.dp, y = (-(now.minute % 4) * 5).dp)
+                .padding(start = 56.dp, bottom = 40.dp)
+                .offset(x = shift.dp, y = (-(now.minute % 4) * 4).dp)
         ) {
-            Text(timeText(now), fontSize = 120.sp, fontWeight = FontWeight.Black, color = Color.White, lineHeight = 120.sp)
-            if (weather != null) {
-                Text(weather.city, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Color.White)
-                Text(
-                    "${weather.tempC}° · ${stringResource(weatherText(weather.code))}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.8f),
-                )
-            } else {
-                Text(dateText(now), style = MaterialTheme.typography.titleLarge, color = Color.White.copy(alpha = 0.85f))
+            Text(
+                timeText(now),
+                fontSize = 92.sp,
+                fontWeight = FontWeight.Black,
+                color = Color(0xFFE3EEF7),
+                lineHeight = 96.sp,
+                letterSpacing = 1.sp,
+            )
+            val place = photo?.caption?.takeIf { it.isNotBlank() } ?: weather?.city
+            if (place != null) {
+                Text(place, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
+            val line = listOfNotNull(
+                weather?.city,
+                weather?.let { "${it.tempC}°" },
+                weather?.let { stringResource(weatherText(it.code)) },
+            ).joinToString(" · ").ifBlank { dateText(now) }
+            Text(line, fontSize = 12.sp, color = Color.White.copy(alpha = 0.8f))
         }
     }
 }

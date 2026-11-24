@@ -28,6 +28,14 @@ class Prefs(context: Context) {
         get() = sp.getString("region", null) ?: Locale.getDefault().country.ifBlank { "US" }
         set(value) = sp.edit().putString("region", value.trim().uppercase()).apply()
 
+    /** YouTube channels shown on the YouTube card: @handles, channel ids or URLs, comma separated. */
+    var youtubeChannels: String
+        get() = sp.getString("yt_channels", null) ?: "@manualdomundo, @CienciaTodoDia, @kurzgesagt"
+        set(value) = sp.edit().putString("yt_channels", value.trim()).apply()
+
+    fun cachedChannelId(handle: String): String? = sp.getString("ytid:" + handle.lowercase(), null)
+    fun cacheChannelId(handle: String, id: String) = sp.edit().putString("ytid:" + handle.lowercase(), id).apply()
+
     /** 0 = never. */
     var ambientMinutes: Int
         get() = sp.getInt("ambient", 5)

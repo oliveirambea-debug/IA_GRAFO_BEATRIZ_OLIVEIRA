@@ -13,7 +13,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.beatriz.tvlauncher.data.AppEntry
 import com.beatriz.tvlauncher.data.AppRepository
+import com.beatriz.tvlauncher.data.CardItem
+import com.beatriz.tvlauncher.data.CardKind
+import com.beatriz.tvlauncher.data.CardKinds
+import com.beatriz.tvlauncher.data.CardTile
 import com.beatriz.tvlauncher.data.DailyPhoto
+import com.beatriz.tvlauncher.data.MusicCharts
+import com.beatriz.tvlauncher.data.WidgetCard
+import com.beatriz.tvlauncher.data.YouTubeFeed
+import java.time.Duration
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import com.beatriz.tvlauncher.data.Prefs
 import com.beatriz.tvlauncher.data.ProviderFeed
 import com.beatriz.tvlauncher.data.Providers
@@ -39,7 +49,11 @@ class LauncherViewModel @JvmOverloads constructor(
     var apps by mutableStateOf<List<AppEntry>>(emptyList()); internal set
     var pinned by mutableStateOf<List<String>>(emptyList()); internal set
     var weather by mutableStateOf<Weather?>(null); internal set
-    var photoUrl by mutableStateOf<String?>(null); internal set
+    var photo by mutableStateOf<DailyPhoto.Photo?>(null); internal set
+
+    /** Content cards for YouTube / music apps. */
+    val cards = mutableStateMapOf<CardKind, WidgetCard>()
+    private val cardFetchedAt = HashMap<CardKind, Long>()
     var screen by mutableStateOf(Screen.Home)
     var ambient by mutableStateOf(false)
 
@@ -70,13 +84,13 @@ class LauncherViewModel @JvmOverloads constructor(
         startWeather()
         viewModelScope.launch {
             while (true) {
-                val url = withContext(Dispatchers.IO) {
-                    runCatching { DailyPhoto.url(Locale.getDefault().toLanguageTag()) }
+                val p = withContext(Dispatchers.IO) {
+                    runCatching { DailyPhoto.today(Locale.getDefault().toLanguageTag()) }
                         .onFailure { Log.w(TAG, "photo failed", it) }
                         .getOrNull()
                 }
-                if (url != null) photoUrl = url
-                delay(if (url == null) 15 * 60_000L else 6 * 3600_000L)
+                if (p != null) photo = p
+                delay(if (p == null) 15 * 60_000L else 6 * 3600_000L)
             }
         }
         viewModelScope.launch {
@@ -119,6 +133,69 @@ class LauncherViewModel @JvmOverloads constructor(
             if (feed != null) feeds[provider.name] = feed
             else feedFetchedAt[provider.name] = SystemClock.elapsedRealtime() - 5 * 3600_000L // retry in ~1h
         }
+    }
+
+    fun cardFor(app: AppEntry): WidgetCard? = CardKinds.of(app)?.let { cards[it] }
+
+    fun requestCard(app: AppEntry) {
+        val kind = CardKinds.of(app) ?: return
+        val last = cardFetchedAt[kind]
+        if (last != null && SystemClock.elapsedRealtime() - last < 30 * 60_000L) return
+        cardFetchedAt[kind] = SystemClock.elapsedRealtime()
+        viewModelScope.launch {
+            val card = withContext(Dispatchers.IO) {
+                runCatching {
+                    when (kind) {
+                        CardKind.YouTube -> youtubeCard()
+                        CardKind.Music -> musicCard()
+                    }
+                }.onFailure { Log.w(TAG, "card $kind failed", it) }.getOrNull()
+            }
+            if (card != null) cards[kind] = card
+            else cardFetchedAt[kind] = SystemClock.elapsedRealtime() - 25 * 60_000L // retry in ~5 min
+        }
+    }
+
+    private fun str(id: Int, vararg args: Any): String = getApplication<Application>().getString(id, *args)
+
+    private fun youtubeCard(): WidgetCard? {
+        val handles = prefs.youtubeChannels.split(',', '\n').map { it.trim() }.filter { it.isNotEmpty() }
+        val perChannel = handles.mapNotNull { h ->
+            val id = prefs.cachedChannelId(h) ?: runCatching { YouTubeFeed.resolveChannelId(h) }.getOrNull()?.also { prefs.cacheChannelId(h, it) }
+            id?.let { runCatching { YouTubeFeed.latest(it) }.getOrNull() }?.takeIf { it.isNotEmpty() }
+        }
+        if (perChannel.isEmpty()) return null
+        val dateFmt = DateTimeFormatter.ofPattern(android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), "dMMMM"))
+        val now = OffsetDateTime.now()
+        val tiles = perChannel.take(3).map { videos ->
+            val v = videos.first()
+            CardTile(
+                tag = if (Duration.between(v.published, now).toDays() < 7) str(R.string.new_tag) else null,
+                kicker = v.title,
+                title = v.channel,
+                meta = str(R.string.published_on, v.published.format(dateFmt)),
+                image = YouTubeFeed.thumb(v.id),
+                fallbackImage = YouTubeFeed.smallThumb(v.id),
+            )
+        }
+        val shown = perChannel.take(3).map { it.first().id }.toSet()
+        val row = perChannel.flatten().filter { it.id !in shown }.sortedByDescending { it.published }.take(4).map {
+            CardItem(it.title, it.channel, YouTubeFeed.smallThumb(it.id), square = false)
+        }
+        return WidgetCard(tiles, str(R.string.more_on_channels), row, str(R.string.channels_followed, perChannel.size))
+    }
+
+    private fun musicCard(): WidgetCard? {
+        val region = prefs.region
+        val country = Locale("", region).getDisplayCountry(Locale.getDefault()).ifBlank { region }
+        val songs = MusicCharts.top(region, "songs")
+        if (songs.isEmpty()) return null
+        val albums = runCatching { MusicCharts.top(region, "albums") }.getOrDefault(emptyList())
+        val tiles = songs.take(3).mapIndexed { i, s ->
+            CardTile(str(R.string.rank_tag, i + 1), s.name, s.artist, str(R.string.music_meta, country), s.art(600))
+        }
+        val row = albums.take(4).map { CardItem(it.name, it.artist, it.art(200), square = true) }
+        return WidgetCard(tiles, str(R.string.albums_trending), row, str(R.string.top_region, country))
     }
 
     fun feedFor(app: AppEntry): ProviderFeed? = Providers.match(app)?.let { feeds[it.name] }
@@ -168,9 +245,11 @@ class LauncherViewModel @JvmOverloads constructor(
         region: String? = null,
         tmdbKey: String? = null,
         ambientMinutes: Int? = null,
+        youtubeChannels: String? = null,
     ) {
+        youtubeChannels?.let { prefs.youtubeChannels = it; cards.remove(CardKind.YouTube); cardFetchedAt.remove(CardKind.YouTube) }
         city?.let { prefs.city = it; startWeather() }
-        region?.let { prefs.region = it; feeds.clear(); feedFetchedAt.clear() }
+        region?.let { prefs.region = it; feeds.clear(); feedFetchedAt.clear(); cards.clear(); cardFetchedAt.clear() }
         tmdbKey?.let { prefs.tmdbKeyOverride = it; feeds.clear(); feedFetchedAt.clear() }
         ambientMinutes?.let { prefs.ambientMinutes = it }
         settingsVersion++

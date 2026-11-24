@@ -101,6 +101,10 @@ fun SettingsScreen(vm: LauncherViewModel) {
             ) {
                 editing = EditField(tmdbTitle, prefs.tmdbKeyOverride) { vm.updateSettings(tmdbKey = it) }
             }
+            val ytTitle = stringResource(R.string.setting_youtube)
+            SettingRow(ytTitle, prefs.youtubeChannels) {
+                editing = EditField(ytTitle, prefs.youtubeChannels) { vm.updateSettings(youtubeChannels = it) }
+            }
             val minutes = prefs.ambientMinutes
             SettingRow(
                 stringResource(R.string.setting_ambient),
@@ -158,7 +162,7 @@ private fun SettingRow(title: String, value: String?, modifier: Modifier = Modif
             Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             if (value != null) {
                 Spacer(Modifier.width(16.dp))
-                Text(value, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
+                Text(value, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 360.dp))
             }
         }
     }

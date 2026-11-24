@@ -8,42 +8,47 @@ highlight, a clean dock of apps, a clock, and an ambient screen with live weathe
 |---|---|
 | ![](docs/1_home_netflix.png) | ![](docs/2_home_youtube.png) |
 
-| Ambient: sunset | Ambient: night |
+| YouTube card | Music card |
 |---|---|
-| ![](docs/5_ambient_sunset.png) | ![](docs/7_ambient_night.png) |
+| ![](docs/2_home_youtube.png) | ![](docs/2c_home_spotify.png) |
 
 *(These images come from the screenshot tests, which use fake apps and placeholder
 posters. On the TV you see real app banners and real posters.)*
 
 ## What it does
 
-- **Hero that follows the focused app.** Highlight Netflix, Prime Video, Disney+,
-  Max, Globoplay, Apple TV or Paramount+ and the whole screen becomes the most popular
-  title on that service in your country: backdrop, title logo, synopsis,
-  "Open Netflix", episode count, and a row of more popular titles. Other apps get a
-  background tinted with their colors.
-- **Dock** of your favorite apps. The focused app grows and shows its name.
-  Hold OK on an app for *Move left / Move right / Remove*.
-- **All apps** (the ⋮⋮⋮ tile). Hold OK on any app to add it to, or remove it from,
-  the dock.
-- **Ambient screen** after a few idle minutes (configurable): a sky that follows the
-  real sunrise and sunset for your city, clouds when it's cloudy, stars and lit
-  windows at night, a big clock, the temperature and current conditions. The clock
-  shifts slightly every minute so it can't burn into the screen. Press any key to
-  leave it.
+- **Ambient screen first.** The TV wakes up on a full-screen photo of the day with a big
+  clock, the photo's place, and *city · temperature · conditions*. Any key reveals the home
+  screen. It also comes back after a few idle minutes (configurable).
+- **Dock carousel.** Square app icons along the bottom. The focused app always slides to
+  the centre, grows, gets a thin white border and shows its name. Hold OK on an app for
+  *Move left / Move right / Remove*.
+- **Streaming apps** (Netflix, Prime Video, Disney+, Max, Globoplay, Apple TV,
+  Paramount+): the whole screen becomes the most popular title on that service in your
+  country, with its backdrop, title logo, synopsis, a cream "▶ Open Netflix" pill, an
+  episode chip, and a row of more titles.
+- **YouTube:** a floating card with the latest video from each channel you follow (big
+  tiles), "More from your channels" underneath, and a "▶ Open YouTube · N channels
+  followed" pill. The background is the card's artwork, heavily blurred.
+- **Music apps** (Spotify, Deezer, YouTube Music…): the same card with the 3 most played
+  songs in your country and the trending albums.
+- **All apps** (the ⋮⋮⋮ tile): an "All your apps" card. Press OK for the full grid, and
+  hold OK on any app there to add it to the dock or remove it.
 - English and Portuguese, following the TV's language.
 
-## Data sources
+## Data sources (all free)
 
-- **Trending titles:** [TMDB](https://www.themoviedb.org/) "where to watch" data. It
-  needs a **free** API key: create an account, then go to *Settings → API → Create*.
-  Either the v3 "API Key" or the v4 "Read Access Token" works. Without a key
-  everything else still works; streaming apps just show the plain tinted hero.
-  "Popular" means TMDB popularity for titles on that service in your region. It is
-  **not** Netflix's official Top 10, and launchers can't read your personal
-  "continue watching" lists from other apps.
-- **Weather:** [Open-Meteo](https://open-meteo.com/) (no key). Set your city in
-  Settings.
+- **Streaming heroes:** [TMDB](https://www.themoviedb.org/) "where to watch" data. It
+  needs a free API key: create an account, then go to *Settings → API*. Either the v3
+  key or the v4 token works. "Popular" means TMDB popularity for titles on that service
+  in your region, **not** an official Top 10.
+- **YouTube card:** public channel feeds (no key). Choose the channels in *Settings →
+  YouTube channels* as `@handles` separated by commas. The defaults are
+  `@manualdomundo, @CienciaTodoDia, @kurzgesagt`.
+- **Music card:** Apple's public "most played" charts for your country (no key).
+- **Ambient photo:** Bing's photo of the day (no key). **Weather:** Open-Meteo (no key).
+- Launchers can't read other apps' private data (your "continue watching", your Spotify
+  playlists), so those parts show public data instead.
 
 ## 1. Get the APK
 

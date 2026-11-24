@@ -51,13 +51,19 @@ fun AppArt(app: AppEntry, modifier: Modifier = Modifier) {
     }
 }
 
-/** 3x3 dots: the "all apps" symbol. */
+/** 3x3 rounded squares: the "all apps" symbol. */
 @Composable
-fun GridGlyph(modifier: Modifier = Modifier, color: Color = Color.White) {
-    Canvas(modifier.size(26.dp)) {
-        val r = size.minDimension / 10f
+fun GridGlyph(modifier: Modifier = Modifier, color: Color = Color(0xFFEDE6D6)) {
+    Canvas(modifier.size(24.dp)) {
+        val cell = size.minDimension / 3.6f
+        val gap = (size.minDimension - cell * 3) / 2
         for (i in 0..2) for (j in 0..2) {
-            drawCircle(color, r, Offset(size.width * (0.17f + i * 0.33f), size.height * (0.17f + j * 0.33f)))
+            drawRoundRect(
+                color,
+                topLeft = Offset(i * (cell + gap), j * (cell + gap)),
+                size = androidx.compose.ui.geometry.Size(cell, cell),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(cell * 0.2f),
+            )
         }
     }
 }

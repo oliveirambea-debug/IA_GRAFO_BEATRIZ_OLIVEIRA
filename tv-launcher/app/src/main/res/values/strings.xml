@@ -53,4 +53,15 @@
     <string name="all_apps_card">%1$d apps installed on your TV · OK to see them all</string>
     <string name="press_ok">Press OK to open</string>
     <string name="apps_count">%1$d apps</string>
+    <string name="new_tag">NEW</string>
+    <string name="published_on">Published %1$s</string>
+    <string name="more_on_channels">More from your channels</string>
+    <string name="channels_followed">%1$d channels followed</string>
+    <string name="rank_tag">No. %1$d</string>
+    <string name="music_meta">Most played · %1$s</string>
+    <string name="albums_trending">Trending albums</string>
+    <string name="top_region">Top 10 · %1$s</string>
+    <string name="setting_youtube">YouTube channels</string>
+    <string name="trending_in">%1$s · Popular · %2$s</string>
+    <string name="all_your_apps">All your apps</string>
 </resources>

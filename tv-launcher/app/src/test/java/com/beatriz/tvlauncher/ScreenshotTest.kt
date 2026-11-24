@@ -20,6 +20,11 @@ import coil.ImageLoader
 import coil.annotation.ExperimentalCoilApi
 import coil.test.FakeImageLoaderEngine
 import com.beatriz.tvlauncher.data.AppEntry
+import com.beatriz.tvlauncher.data.CardItem
+import com.beatriz.tvlauncher.data.CardKind
+import com.beatriz.tvlauncher.data.CardTile
+import com.beatriz.tvlauncher.data.DailyPhoto
+import com.beatriz.tvlauncher.data.WidgetCard
 import com.beatriz.tvlauncher.data.ProviderFeed
 import com.beatriz.tvlauncher.data.Providers
 import com.beatriz.tvlauncher.data.Title
@@ -110,12 +115,29 @@ class ScreenshotTest {
         val netflix = Providers.ALL.first { it.name == "Netflix" }
         vm.feeds[netflix.name] = ProviderFeed(
             provider = netflix,
+            region = "BR",
             hero = Title(1, "tv", "Northwind", "A fishing town on the edge of the North Atlantic hides a secret that the sea keeps bringing back, one tide at a time.", "/hero.jpg", 100.0),
             logoPath = "/logo.png",
             seasons = 1,
             episodes = 6,
             runtimeMin = null,
             more = (2..9).map { Title(it, "tv", "Title $it", "", "/b$it.jpg", 50.0) },
+        )
+        vm.cards[CardKind.YouTube] = WidgetCard(
+            tiles = listOf(
+                CardTile("Novo", "Construímos um foguete de garrafa PET que vai a 100 metros", "Manual do Mundo", "Publicado em 20 de novembro", "https://i.ytimg.com/vi/a/hq720.jpg"),
+                CardTile(null, "Por que o céu é azul? A resposta é mais estranha do que parece", "Ciência Todo Dia", "Publicado em 18 de novembro", "https://i.ytimg.com/vi/b/hq720.jpg"),
+                CardTile(null, "How Many People Can You Feed with a Dollar?", "Kurzgesagt", "Publicado em 19 de novembro", "https://i.ytimg.com/vi/c/hq720.jpg"),
+            ),
+            rowLabel = "Mais nos seus canais",
+            row = (1..4).map { CardItem("Vídeo recente número $it com um título comprido", "Canal $it", "https://i.ytimg.com/vi/r$it/mqdefault.jpg", false) },
+            pillSecondary = "3 canais seguidos",
+        )
+        vm.cards[CardKind.Music] = WidgetCard(
+            tiles = (1..3).map { CardTile("Nº $it", "Nome da música $it", "Artista $it", "Mais tocadas · Brasil", "https://music/$it/600x600bb.jpg") },
+            rowLabel = "Álbuns em alta",
+            row = (1..4).map { CardItem("Álbum $it", "Artista $it", "https://music/a$it/200x200bb.jpg", true) },
+            pillSecondary = "Top 10 · Brasil",
         )
         return vm
     }
@@ -134,6 +156,8 @@ class ScreenshotTest {
     @Test fun home_streaming() = capture("1_home_netflix", viewModel("com.netflix.ninja"))
 
     @Test fun home_app() = capture("2_home_youtube", viewModel("com.google.android.youtube.tv"))
+
+    @Test fun home_spotify() = capture("2c_home_spotify", viewModel("com.spotify.tv.android"))
 
     @Test fun home_all_apps_card() = capture("2b_home_all_apps_card", viewModel(DockItemKeys.ALL_APPS))
 
@@ -156,7 +180,7 @@ class ScreenshotTest {
     @Test fun ambient_photo() {
         val vm = viewModel(null)
         vm.weather = Weather("Lisboa", 18, 0, 6 * 60, 18 * 60)
-        vm.photoUrl = "https://www.bing.com/th?id=photo_1920x1080.jpg"
+        vm.photo = DailyPhoto.Photo("https://www.bing.com/th?id=photo_1920x1080.jpg", "Broto de samambaia")
         vm.ambient = true
         capture("8_ambient_photo", vm, autoAdvance = false)
     }

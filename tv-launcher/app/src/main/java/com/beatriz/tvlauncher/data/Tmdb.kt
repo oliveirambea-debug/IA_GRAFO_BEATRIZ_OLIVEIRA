@@ -13,6 +13,7 @@ data class Title(
 
 data class ProviderFeed(
     val provider: Provider,
+    val region: String,
     val hero: Title,
     val logoPath: String?,
     val seasons: Int?,
@@ -89,6 +90,7 @@ object Tmdb {
 
         return ProviderFeed(
             provider = provider,
+            region = region,
             hero = hero.copy(overview = detail?.optString("overview")?.ifBlank { null } ?: hero.overview),
             logoPath = logo,
             seasons = detail?.optInt("number_of_seasons")?.takeIf { it > 0 },
